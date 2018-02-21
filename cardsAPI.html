@@ -1,0 +1,33 @@
+<form action="cgi-bin/server.py" method="POST">
+	Number: <input type="text" name="number" value="4111111111111111"/><br>
+	Expiry Month: <input type="text" name="expiryMonth" value="8"/><br>
+	Expiry Year: <input type="text" name="expiryYear" value="2018"/><br>
+	CVC: <input type="text" name="cvc" value="737"/><br>
+	Holder Name: <input type="text" name="holderName" value="John Smith"/><br>
+	Value: <input type="text" name="value" value="1500"/><br>
+	Currency: <input type="text" name="currency" value="EUR"/><br>
+	Reference: <input type="text" name="reference" value="Test payment"/><br>
+	Merchant Account: <input type="text" name="merchantAccount" value="ColinRood"/><br>
+	<input type="submit"/>
+</form>
+
+
+
+
+<!--
+	{
+	  "card": {
+	    "number": "4111111111111111",
+	    "expiryMonth": "8",
+	    "expiryYear": "2018",
+	    "cvc": "737",
+	    "holderName": "John Smith"
+	  },
+	  "amount": {
+	    "value": 1500,
+	    "currency": "EUR"
+	  },
+	  "reference": "payment-2017-5-30-16",
+	  "merchantAccount": "YOUR_MERCHANT_ACCOUNT"
+	}
+-->

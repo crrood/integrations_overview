@@ -56,7 +56,7 @@ Point your browser to localhost:8080/test.html, and submit the form.  You should
 ### Create form to collect card data from user
 `cardsAPI.html`
 ```HTML
-<form action="cgi-bin/server.py" method="POST">
+<form action="cgi-bin/server_cards_api.py" method="POST">
 	Number: <input type="text" name="number" value="4111111111111111"/><br>
 	Expiry Month: <input type="text" name="expiryMonth" value="8"/><br>
 	Expiry Year: <input type="text" name="expiryYear" value="2018"/><br>
@@ -92,7 +92,7 @@ Format request to match Adyen specs, and send to the PAL
   "merchantAccount": "YOUR_MERCHANT_ACCOUNT"
 }
 ```
-`cgi-bin/server.py:`
+`cgi-bin/server_cards_api.py:`
 ```Python
 #!/usr/local/adyen/python3/bin/python3
 

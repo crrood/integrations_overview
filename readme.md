@@ -40,7 +40,7 @@ cgitb.enable()
 form = cgi.FieldStorage()
 
 # respond with headers
-sys.stdout.write("Content-type:{}\r\n".format(content_type))
+sys.stdout.write("Content-type:text/plain\r\n")
 sys.stdout.write("\r\n")
 
 # send data for debugging
@@ -59,6 +59,8 @@ If you want to use python 3.* instead:
 `python -m http.server --cgi 8080`
 
 Point your browser to localhost:8080/test.html, and submit the form.  You should see the form data displayed in the browser as a python FieldStorage object, plus the specific field we chose to display.
+
+If you get a permission error, type `chmod +x cgi-bin/server_test.py`
 <br><br>
 
 ### Create form to collect card data from user

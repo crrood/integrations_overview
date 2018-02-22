@@ -16,7 +16,10 @@ WS_USER = "ws_306326@Company.AdyenTechSupport"
 WS_PASS = "7UuQQEmR=2Qq9ByCt4<3r2zq^"
 
 # generate headers for response
+# USER:PASS -> base64 encode
+
 basic_auth_string = "{}:{}".format(WS_USER, WS_PASS)
+# USER:PASS
 basic_auth_string = base64.b64encode(basic_auth_string.encode("utf8")).decode("utf8")
 
 header_object = {
@@ -49,22 +52,23 @@ data["amount"] = {
 	"currency": form.getvalue("currency")
 }
 
+# respond with headers
+sys.stdout.write("Content-type:application/json\r\n\r\n")
+
 # create request to server
 url = "https://pal-test.adyen.com/pal/servlet/Payment/authorise"
 
 # create request object
 request = Request(url, json.dumps(data).encode("UTF8"), header_object)
-response = urlopen(request).read()
 
-# respond with headers
-sys.stdout.write("Content-type:application/json\r\n\r\n")
+# sends data to server
+response = urlopen(request).read()
 
 # send data for debugging
 print(form)
 print(data)
 print("-----------------")
 print(response)
-
 
 
 

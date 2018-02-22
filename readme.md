@@ -2,10 +2,18 @@
 
 ## Session 1 - Hello world and raw card transactions:
 
+### Check openSSL version
+Make sure that you're able to send TLSv1.2 requests
+
+`/usr/local/adyen/python3/bin/python3 -c "import ssl; print(ssl.OPENSSL_VERSION)"`
+
+The result should be greater than 1, for instance `OpenSSL 1.0.2n  7 Dec 2017`
+<br><br>
+
 ### Create basic form
 Send dummy data to the server to echo back to the client
 
-`test.html:`
+`test.html`
 ```HTML
 <form action="cgi-bin/server_test.py" method="POST">
 	<input type="text" name="testValue" value="Hello world!"/>
@@ -14,16 +22,16 @@ Send dummy data to the server to echo back to the client
 ```
 <br>
 
-### Write echo function for server
-Returns data to client exactly as sent via HTTP
+### Create basic backend
+Parses data into an object we can use in python, and displays it back to the browser
 
-`./cgi-bin/server_test.py:`
+`./cgi-bin/server_test.py`
 ```Python
 #!/usr/local/adyen/python3/bin/python3
 
 # imports
-import sys			## format printing of HTTP response
-import cgi, cgitb	## handle server requests
+import sys          ## format printing of HTTP response
+import cgi, cgitb   ## handle server requests
 
 # enable debugging cgi errors from the browser
 cgitb.enable()
@@ -54,6 +62,8 @@ Point your browser to localhost:8080/test.html, and submit the form.  You should
 <br><br>
 
 ### Create form to collect card data from user
+Same as test.html, but gets all the information needed to submit a test card transaction
+
 `cardsAPI.html`
 ```HTML
 <form action="cgi-bin/server_cards_api.py" method="POST">
@@ -74,7 +84,7 @@ Point your browser to localhost:8080/test.html, and submit the form.  You should
 ### Process card data on the backend
 Format request to match Adyen specs, and send to the PAL
 
-`Example API request:`
+This is what we want our request to look like:
 ```JSON
 {
   "card": {
@@ -92,15 +102,18 @@ Format request to match Adyen specs, and send to the PAL
   "merchantAccount": "YOUR_MERCHANT_ACCOUNT"
 }
 ```
-`cgi-bin/server_cards_api.py:`
+
+Here's the code to make it happen:
+
+`cgi-bin/server_cards_api.py`
 ```Python
 #!/usr/local/adyen/python3/bin/python3
 
 # imports
-import sys			## format printing of HTTP response
-import cgi, cgitb	## handle server requests
-import json			## methods for JSON objects
-import base64		## for creating auth string
+import sys          ## format printing of HTTP response
+import cgi, cgitb   ## handle server requests
+import json         ## methods for JSON objects
+import base64       ## for creating auth string
 
 from urllib.request import Request, urlopen		## for sending requests to Adyen
 
@@ -126,23 +139,24 @@ form = cgi.FieldStorage()
 # create object to send to Adyen
 data = {}
 
-# indent card data
-data["card"] = {}
-data["card"]["number"] = form.getvalue("number")
-data["card"]["expiryMonth"] = form.getvalue("expiryMonth")
-data["card"]["expiryYear"] = form.getvalue("expiryYear")
-data["card"]["cvc"] = form.getvalue("cvc")
-data["card"]["holderName"] = form.getvalue("holderName")
+# transfer data from form object to our request
+data["reference"] = form.getvalue("reference")
+data["merchantAccount"] = form.getvalue("merchantAccount")
+
+# indent card and amount data to conform to Adyen specs
+data["card"] = {
+	"number": form.getvalue("number"),
+	"expiryMonth": form.getvalue("expiryMonth"),
+	"expiryYear": form.getvalue("expiryYear"),
+	"cvc": form.getvalue("cvc"),
+	"holderName": form.getvalue("holderName")
+}
 
 # indent amount data
-data["amount"] = {}
-data["amount"]["value"] = form.getvalue("value")
-data["amount"]["currency"] = form.getvalue("currency")
-
-# additional data fields
-data["reference"] = form.getvalue("reference")
-
-data["merchantAccount"] = form.getvalue("merchantAccount")
+data["amount"] = {
+	"value": form.getvalue("value"),
+	"currency": form.getvalue("currency")
+}
 
 # create request to server
 url = "https://pal-test.adyen.com/pal/servlet/Payment/authorise"

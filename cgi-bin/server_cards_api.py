@@ -30,23 +30,24 @@ form = cgi.FieldStorage()
 # create object to send to Adyen
 data = {}
 
-# indent card data
-data["card"] = {}
-data["card"]["number"] = form.getvalue("number")
-data["card"]["expiryMonth"] = form.getvalue("expiryMonth")
-data["card"]["expiryYear"] = form.getvalue("expiryYear")
-data["card"]["cvc"] = form.getvalue("cvc")
-data["card"]["holderName"] = form.getvalue("holderName")
+# transfer data from form object to our request
+data["reference"] = form.getvalue("reference")
+data["merchantAccount"] = form.getvalue("merchantAccount")
+
+# indent card and amount data to conform to Adyen specs
+data["card"] = {
+	"number": form.getvalue("number"),
+	"expiryMonth": form.getvalue("expiryMonth"),
+	"expiryYear": form.getvalue("expiryYear"),
+	"cvc": form.getvalue("cvc"),
+	"holderName": form.getvalue("holderName")
+}
 
 # indent amount data
-data["amount"] = {}
-data["amount"]["value"] = form.getvalue("value")
-data["amount"]["currency"] = form.getvalue("currency")
-
-# additional data fields
-data["reference"] = form.getvalue("reference")
-
-data["merchantAccount"] = form.getvalue("merchantAccount")
+data["amount"] = {
+	"value": form.getvalue("value"),
+	"currency": form.getvalue("currency")
+}
 
 # create request to server
 url = "https://pal-test.adyen.com/pal/servlet/Payment/authorise"

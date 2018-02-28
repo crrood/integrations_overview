@@ -177,9 +177,134 @@ print("-----------------")
 print(response)
 ```
 
+## Session 2 - HPP and CSE
 
+### Create form for HPP /setup request
+Same structure as cards, but with different data:
 
+`HPP.html`
+```HTML
+<html>
 
+<body>
+<form id="infoForm" class="clientForm" action="cgi-bin/server_hpp.py">
+	AllowedMethods: <input type="text" id="allowedMethods" name="allowedMethods" value=""/><br>
+	Amount: <input type="text" id="paymentAmount" name="paymentAmount" value="199"/><br>
+	MerchantReference: <input type="text" id="merchantReference" name="merchantReference" value="HPP payment"/><br>
+	Currency: <input type="text" id="currencyCode" name="currencyCode" value="USD"/><br>
+	CountryCode: <input type="text" id="countryCode" name="countryCode" value="US"/><br>
+	ShopperLocale: <input type="text" id="shopperLocale" name="shopperLocale" value="en_GB"/><br>
+	ShopperReference: <input type="text" id="shopperReference" name="shopperReference" value="HPP shopper 1"/><br>
+	<!-- CHANGE TO YOUR TEST MERCHANT ACCOUNT -->
+	MerchantAccount: <input type="text" id="merchantAccount" name="merchantAccount" value="ColinRood"/><br>
+	<!-- ENTER YOUR SKINCODE BELOW -->
+	SkinCode: <input type="text" id="skinCode" name="skinCode" value="rKJeo2Mf"/><br>
+	resURL: <input type="text" id="resURL" name="resURL" value="http://localhost:8080/cgi-bin/server_test.py"/><br>
+	<input type="submit" class="submitBtn" id="checkoutBtn" value="Checkout"/>
+</form>
+</body>
 
+</html>
+```
 
+### Create backend to send data to Adyen
+We're going to take the same basic structure that we used for cards, and add signature calculation and a browser redirect.
 
+`cgi-bin/server_hpp.py`
+```Python
+#!/usr/local/adyen/python3/bin/python3
+
+# imports
+import sys			## format printing of HTTP response
+import cgi, cgitb	## handle server requests
+import json			## methods for JSON objects
+
+# merchant signature
+import base64, binascii				## encoding / decoding
+import hmac, hashlib				## cryptography libraries
+from collections import OrderedDict	## for sorting keys
+
+# URL / request helpers
+import datetime     ## for sessionvalidity field
+import webbrowser   ## to redirect user to HPP
+from urllib.parse import urlencode	## format data to send to Adyen
+
+# enable debugging cgi errors from the browser
+cgitb.enable()
+
+# parse payment data from URL params
+data = {}
+form = cgi.FieldStorage()
+for key in form.keys():
+	data[key] = form.getvalue(key)
+
+# server side fields
+data["sessionValidity"] = datetime.datetime.now().isoformat().split(".")[0] + "-11:00"
+data["shipBeforeData"] = datetime.datetime.now().isoformat().split(".")[0] + "-11:00"
+
+# generate merchant signature
+
+# HMAC key
+KEY = "BE1C271E9CD9D2F6611D2C7064FE9EE314DA58539195E92BF5AC706209A514DB"
+
+# sort data alphabetically by keys
+sorted_data = OrderedDict(sorted(data.items(), key=lambda t: t[0]))
+
+# escape special characters
+escaped_data = OrderedDict(map(lambda t: (t[0], t[1].replace('\\', '\\\\').replace(':', '\\:')), sorted_data.items()))
+
+# join all keys followed by all values, separated by colons
+signing_string = ":".join(escaped_data.keys()) + ":" + ":".join(escaped_data.values())
+
+# convert to hex
+binary_hmac_key = binascii.a2b_hex(KEY)
+
+# calculate merchant sig
+binary_hmac = hmac.new(binary_hmac_key, signing_string.encode("utf8"), hashlib.sha256)
+
+# base64 encode signature
+signature = base64.b64encode(binary_hmac.digest())
+
+# generate HMAC signature
+data["merchantSig"] = signature
+
+# respond with headers
+sys.stdout.write("Content-type:application/json\r\n\r\n")
+
+# send data for debugging
+print(data)
+
+# redirect to HPP page in new window
+url = "https://test.adyen.com/hpp/pay.shtml"
+webbrowser.open_new(url + "?" + urlencode(data))
+```
+
+### Result page (optional)
+So that we can mimick the shopper being sent back to the Merchant's website, we'll create an endpoint which will display the data sent back from Adyen on a successful payment.
+
+Since we already did this as part of our Hello World program, we'll re-use the same file:
+
+`cgi-bin/server_test.py`
+```Python
+#!/usr/local/adyen/python3/bin/python3
+
+# imports
+import sys			## format printing of HTTP response
+import cgi, cgitb	## handle server requests
+
+# enable debugging cgi errors from the browser
+cgitb.enable()
+
+# parse payment data from URL params 
+form = cgi.FieldStorage()
+
+# respond with headers
+sys.stdout.write("Content-type:text/plain\r\n")
+sys.stdout.write("\r\n")
+
+# send data for debugging
+print(form)
+# print(form.getvalue("testValue"))  ## <-- COMMENT OUT THIS LINE
+```
+
+Note that you have to remove / comment out `print(form.getvalue("testValue"))`.  Otherwise python will try to find a "testValue" field in the response data, and will crash when one doesn't exist.

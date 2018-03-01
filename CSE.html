@@ -1,9 +1,5 @@
 <html>
 
-<head>
-	<link rel="stylesheet" href="styles/adyen.cardtype.css" type="text/css" />
-</head>
-
 <body>
 
 	<h3>Payment info</h3>
@@ -32,7 +28,6 @@
 
 <!-- Make sure the library is *NOT* loaded in the "head" of the HTML document -->
 <script type="text/javascript" src="scripts/adyen.encrypt.min.js"></script>
-<script type="text/javascript" src="scripts/adyen.cardtype.min.js"></script>
 
 </html>
 
@@ -62,7 +57,7 @@ function initCardsCheckout() {
 	options.onsubmit = onSubmit;
 
 	// Assign pointer to card type indicator in DOM
-	options.cardTypeElement = document.getElementById('cardType');
+	// options.cardTypeElement = document.getElementById('cardType');
 
 	// Set key value from webservice user in Customer Area
 	var key = "10001|DAAA84F903B74D76E2E452201F49998FAF18743AF5BBE880E169752F3C60B8C5C601E99CBF66C4DAE57B818ECA837FD0A53A70FFC7515796E0CB4D4A07B15A1D0496B3E2D41A8099A25E055E5224E15AF203F8EDFBDA9FCCF6A5793AA3C620CB62D81F9103BF5EF362531D8742B84B597F46D2B29ABFE680DB09F1AE6B9D4ED3CBEDA22E3CC4D388BAC76A39116E0CA787483419B941F24FFD9EB2DC158EA20CA5A84D1DB1E3B5FEE2B8AB5512EAF7DE572366B10D5C57C09F3002CF0FD0AE557887C4078DE00EB48CDD6763BD976C969D91200C5DB11B2C3B002B4C31EC5BBFB27B00791813757C21D631DCC1E9B74610BCA05F5CFA4DE0662C0F561CF616BB"
@@ -71,7 +66,7 @@ function initCardsCheckout() {
 	encryptedForm = adyen.encrypt.createEncryptedForm(form, key, options);
 
 	// Activate the card type indicator
-	encryptedForm.addCardTypeDetection(options.cardTypeElement)
+	// encryptedForm.addCardTypeDetection(options.cardTypeElement)
 }
 
 function onSubmit(e) {
@@ -96,7 +91,7 @@ function onSubmit(e) {
 	params = params + "encryptedData=" + encodeURIComponent(form.elements["adyen-encrypted-data"].value) + "&";
 
 	// redirect to server
-	window.location = "./cgi-bin/server_cse.py" + params;
+	window.location = "./cgi-bin/server_test.py" + params;
 }
 
 initCardsCheckout();

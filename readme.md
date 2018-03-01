@@ -177,7 +177,17 @@ print("-----------------")
 print(response)
 ```
 
-## Session 2 - HPP and CSE
+## Session 2 - HPP
+
+### Get the project from Github
+Lets get all the code at once instead of copying piece by piece.  Open a terminal and navigate to where you want to put your project, then run:
+```bash
+git clone https://github.com/crrood/integrations_overview.git
+cd integrations_overview
+./start_server
+```
+This will create the project, update permissions, and start the server.
+<br><br>
 
 ### Create form for HPP /setup request
 Same structure as cards, but with different data:
@@ -206,6 +216,7 @@ Same structure as cards, but with different data:
 
 </html>
 ```
+<br>
 
 ### Create backend to send data to Adyen
 We're going to take the same basic structure that we used for cards, and add signature calculation and a browser redirect.
@@ -278,6 +289,7 @@ print(data)
 url = "https://test.adyen.com/hpp/pay.shtml"
 webbrowser.open_new(url + "?" + urlencode(data))
 ```
+<br>
 
 ### Result page (optional)
 So that we can mimick the shopper being sent back to the Merchant's website, we'll create an endpoint which will display the data sent back from Adyen on a successful payment.
@@ -308,3 +320,201 @@ print(form)
 ```
 
 Note that you have to remove / comment out `print(form.getvalue("testValue"))`.  Otherwise python will try to find a "testValue" field in the response data, and will crash when one doesn't exist.
+
+## Session 3 - CSE
+
+### Create HTML forms
+Because the encryption library runs on the front-end, the web side of CSE is much more complicated than API or HPP.  First we'll set up two separate forms for the payment and card details:
+
+`CSE.HTML`
+```HTML
+<body>
+
+	<h3>Payment info</h3>
+	<form id="paymentForm">
+		Value: <input type="text" name="value" value="1500"/><br>
+		Currency: <input type="text" name="currency" value="USD"/><br>
+		Reference: <input type="text" name="reference" value="CSE Payment"/><br>
+		<!-- REPLACE THIS WITH YOUR OWN TEST MERCHANT ACCOUNT -->
+		MerchantAccount: <input type="text" name="merchantAccount" value="ColinRood"/><br>
+	</form>
+
+	<h3>Card info</h3>
+	<form  id="adyen-encrypted-form">
+		<div id="cardType" ></div><br>
+		Number: <input type="text" size="20" data-encrypted-name="number" value="4111111111111111"/><br>
+		Name: <input type="text" size="20" data-encrypted-name="holderName" value="Test Person"/><br>
+		Expiry Month: <input type="text" size="2" data-encrypted-name="expiryMonth" value="08"/><br>
+		Expiry Year: <input type="text" size="4" data-encrypted-name="expiryYear" value="2018"/><br>
+		CVC: <input type="text" size="4" data-encrypted-name="cvc" value="737"/><br>
+		<input type="hidden" id="adyen-encrypted-form-expiry-generationtime" value="" data-encrypted-name="generationtime"/>
+		<input type="submit"  value="Pay"/>
+	</form>
+	<button id="logBtn">Log form data</button>
+
+</body>
+```
+<br>
+
+### Import Adyen encryption libraries
+Download the adyen encryption library from https://raw.githubusercontent.com/Adyen/adyen-cse-web/master/js/adyen.encrypt.min.js and save it to `scripts/adyen.encrypt.min.js`.
+
+Then add an import tag to your HTML at the end of the body section:
+
+`CSE.HTML`
+```HTML
+<!-- Make sure the library is *NOT* loaded in the "head" of the HTML document -->
+<script type="text/javascript" src="scripts/adyen.encrypt.min.js"></script>
+```
+<br>
+
+### Add javascript to activate encryption
+For the sake of readability, we'll put the javascript directly into the HTML file:
+
+`CSE.HTML`
+```javascript
+// based heavily on:
+// https://github.com/Adyen/adyen-cse-web/blob/master/adyen.encrypt.simple.html
+
+// set up options and initialize encrypted form object
+// run on page load
+function initCardsCheckout() {
+
+	// Generate current time client-side (unsafe)
+	var isoDate = new Date().toISOString();
+	isoDate = isoDate.substring(0, isoDate.length - 1) + "-8:00";
+	document.getElementById('adyen-encrypted-form-expiry-generationtime').value = isoDate;
+
+	// The form element to encrypt.
+	var form = document.getElementById('adyen-encrypted-form');
+
+	// See https://github.com/Adyen/CSE-JS/blob/master/Options.md for details on the options to use.
+	var options = {
+		"enableValidations": false,
+	};
+
+	// Method to send form to server
+	options.onsubmit = onSubmit;
+
+	// Assign pointer to card type indicator in DOM
+	// options.cardTypeElement = document.getElementById('cardType');
+
+	// Set key value from webservice user in Customer Area
+	var key = "10001|DAAA84F903B74D76E2E452201F49998FAF18743AF5BBE880E169752F3C60B8C5C601E99CBF66C4DAE57B818ECA837FD0A53A70FFC7515796E0CB4D4A07B15A1D0496B3E2D41A8099A25E055E5224E15AF203F8EDFBDA9FCCF6A5793AA3C620CB62D81F9103BF5EF362531D8742B84B597F46D2B29ABFE680DB09F1AE6B9D4ED3CBEDA22E3CC4D388BAC76A39116E0CA787483419B941F24FFD9EB2DC158EA20CA5A84D1DB1E3B5FEE2B8AB5512EAF7DE572366B10D5C57C09F3002CF0FD0AE557887C4078DE00EB48CDD6763BD976C969D91200C5DB11B2C3B002B4C31EC5BBFB27B00791813757C21D631DCC1E9B74610BCA05F5CFA4DE0662C0F561CF616BB"
+
+	// Create the form object and bind encryption options to the form.
+	encryptedForm = adyen.encrypt.createEncryptedForm(form, key, options);
+
+	// Activate the card type indicator
+	// encryptedForm.addCardTypeDetection(options.cardTypeElement)
+}
+
+function onSubmit(e) {
+	// prevent the default redirect
+	e.preventDefault();
+
+	// build URL encoded query string to send to server
+	var params = "?endpoint=CSE&"
+
+	// get value and currency for transaction
+	var paymentForm = document.getElementById("paymentForm");
+	var element;
+	for (var i = 0; i < paymentForm.elements.length; i++) {
+		element = paymentForm.elements[i];
+		params = params + element.name + "=" + element.value + "&";
+	}
+
+	// The form element to encrypt
+	var form = document.getElementById("adyen-encrypted-form");
+
+	// get encrypted card data from form element
+	params = params + "encryptedData=" + encodeURIComponent(form.elements["adyen-encrypted-data"].value) + "&";
+
+	// redirect to server
+	window.location = "./cgi-bin/server_cse.py" + params;
+}
+
+initCardsCheckout();
+```
+
+Let's make sure that everything is working on the front-end by changing the last line to `window.location = "./cgi-bin/server_test.py" + params;` and submitting the form.  You should see something like this:
+
+```
+FieldStorage(None, None, [MiniFieldStorage('endpoint', 'CSE'), MiniFieldStorage('value', '1500'), MiniFieldStorage('currency', 'USD'), MiniFieldStorage('reference', 'CSE Payment'), MiniFieldStorage('merchantAccount', 'ColinRood'), MiniFieldStorage('encryptedData', 'adyenjs_0_1_21$jJYbNgVKnLgip1HyBm6ueQwT7YsEAX1nu6ARhT2FOVRzb1UrmI2jEZ3h2Hw60PhyaVlxm3tomcDt9I9U9CdsP8r8T8pqkYjstIzMyyG7pBgX3CJG0lBaPXXD6OZbzsSi7rg7 qd/062VAvfAf1CY0GX4JhS3Z6kVILSjV0ygZAGxIU/1dtONjLHN9tPtjWK7gixL9BSCMxnS6BU uXt1J8dn6rptcrUAhZm2mt2IP24IvJ6M6q/mGAlNzfE4XTv/c4IqVAqABCgYQSyaRtpZ5evXm44/27 eSkq0hH I1rnCh6Ul76CwAR9XGesIYq8lHJIj29ej7/Gkr/c4OyxfbQ==$HoDVfZ8yFplG k/KeHZiS8bk1g7ROcYqUnSiDIaWKvKJnDSkoo96IPzV5Pzgm5RaU9dR3YySIInvRA1rHDnVi1mkr1 F1  BFrYNsswcQOk9rw3Hvf/yce8bw8yxinXuRatfP/LpTfUQVsNIkW2dYMrjymTpkzEwbRsewi6bFbw659I 2i4FT1vJAAdGDn2NNCXMIbDXdqhA2kTWzWjcQhPic3jhszuQ zB3QvZpupNRgTkMAnUHJN/V3YsJy74qoydZJol7rcLqftRLVs/w85Hf Al3Rc0RSKPABV6ECs0/apNvHhU1WB3BZZ36SoIWynGYZbAK3wDOvFGl2xAYpRjkEjZ2YiKIiWLFmeD ouREaOHzm pKL4VyGMHFId/Tux 3rxWSUHC6T65CNDF0IX9skksmhfEOofGduATCtMA3Dt1c3AFTt3KFbiyrAzlugLuTqfa07iKdDLPQW8DuwlZ SVv3l7yn/umag6HOd TuckPMJ69KAP0tcvDfusSk8snhuRGJZFgYNkkPuVEIAiIOcWs/rScdeYj4ZnUS5RsR1LchkuBigbj8bH3Jotjp2UggOI2tMmzOEbI9/y NPlviIYS0y81w/AZQ22yn S0oDXSGQo5zmsZ2pNrw8R /a7tqlHTFo11oWA3nnarHX6 jKHHT/9o=')])
+```
+<br>
+
+### Implement the CSE server
+The hard part is done already - now we just need to send the data to the Adyen server:
+
+`cgi-bin/server_cse.py`
+```Python
+#!/usr/local/adyen/python3/bin/python3
+
+# imports
+import sys			## format printing of HTTP response
+import cgi, cgitb	## handle server requests
+import json			## methods for JSON objects
+import base64		## for creating auth string
+
+from urllib.request import Request, urlopen		## for sending requests to Adyen
+
+# import os
+# from urllib.parse import parse_qs
+
+# enable debugging cgi errors from the browser
+cgitb.enable()
+
+# user credentials
+WS_USER = "ws_306326@Company.AdyenTechSupport"
+WS_PASS = "7UuQQEmR=2Qq9ByCt4<3r2zq^"
+
+# generate headers for response
+# USER:PASS -> base64 encode
+basic_auth_string = "{}:{}".format(WS_USER, WS_PASS)
+basic_auth_string = base64.b64encode(basic_auth_string.encode("utf8")).decode("utf8")
+
+header_object = {
+	"Content-type": "application/json",
+	"Authorization": "Basic {}".format(basic_auth_string)
+}
+
+# parse payment data from URL params 
+form = cgi.FieldStorage()
+
+# create object to send to Adyen
+data = {}
+
+# transfer data from form object to our request
+data["reference"] = form.getvalue("reference")
+data["merchantAccount"] = form.getvalue("merchantAccount")
+
+# indent amount data
+data["amount"] = {
+	"value": form.getvalue("value"),
+	"currency": form.getvalue("currency")
+}
+
+# move encrypted card data into additionalData container
+data["additionalData"] = {
+	# the cgi url decoder mistakes "+"" for " " and must be corrected
+	"card.encrypted.json": form.getvalue("encryptedData").replace(" ", "+")
+}
+
+# create request to server
+url = "https://pal-test.adyen.com/pal/servlet/Payment/authorise"
+
+# create request object
+request = Request(url, json.dumps(data).encode("UTF8"), header_object)
+
+# sends data to server
+response = urlopen(request).read()
+
+# respond with headers
+sys.stdout.write("Content-type:application/json\r\n\r\n")
+
+# send data for debugging
+print(data)
+print("-----------------")
+print(response)
+```

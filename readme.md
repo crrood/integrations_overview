@@ -176,7 +176,7 @@ print(data)
 print("-----------------")
 print(response)
 ```
-
+<br><br>
 ## Session 2 - HPP
 
 ### Get the project from Github
@@ -320,7 +320,7 @@ print(form)
 ```
 
 Note that you have to remove / comment out `print(form.getvalue("testValue"))`.  Otherwise python will try to find a "testValue" field in the response data, and will crash when one doesn't exist.
-
+<br><br>
 ## Session 3 - CSE
 
 ### Create HTML forms
@@ -517,4 +517,13 @@ sys.stdout.write("Content-type:application/json\r\n\r\n")
 print(data)
 print("-----------------")
 print(response)
+```
+<br>
+
+### Fire it up!
+Modify the redirect in CSE.html to server_cse.py, and submit the form to the server.  You should see the data from your call, and a successful response from Adyen:
+```JSON
+{'merchantAccount': 'ColinRood', 'additionalData': {'card.encrypted.json': 'adyenjs_0_1_21$1w0e8USxzM4n66zqbC86S+L0nziRyWDsHePKsj+8dwz7zKqSyRdo0U4GI+5964sgECf+Cw+WFBPeixJY+nzO77rJSEVqz1GY/jlCs3tjd36tuKpjPiSJ1AMsVIoYzKJdtOjyRL2yF7Yo/lXcflPGY/2eoFLTuq3eKn1QgABWwVJJLG9Y7x7263aM02sLY7JSnjN6/RKxzHCHksYHTNYs4f5leqBWooH16Tw59KoOgSztAwMC4Oqx2BhgUeZ3ue+sQI8BuL22hCi2LPoWmrA6luTiXRYW4S8qKpgaQqhOjUmO8lrfLCd8vnj3cJwL5IigoC6d+eOYZRt5nm3tP1A9ug==$O2ovqLU9BfAD5IYeigw3MmqKMCTzXh6cki4E9rYh03UZx34ztYpwsdDAEekYQNzlAn2adPfyV99wLCa/XAda8CySUqpTHkv+eKvwQDD7GUTxn6DCPjvnX84RkhYSAOmI0k/KrFuHyMRyCUeEX1dFBQ2Q0XRT8llT4Cb7SICY+swINpOxjU6eyogiEJDZWhAOxGhRDA0KYHHhCuOhEA261hEqhOUsmDaqAUcx9GSof5Z74vBwY2YkdtxGUhl4Jqbu5/mYRXAnwITaZc79lGWAiA4RzyPo0OeO6g2d9OUeOzKZsUUIA5Zvbno7rYEWY9phg0QptdHo3YW3XcAVQMjfQXtTElPUzrIeqnTbuYtfcGpMcTUgJiaRsbp49rUvRA3RA4YJmkPZUrqXBpB7p34aSKyiVWIN9WPQj4fRevQ6b8J3bCKnvKJFlTkP9TkBBZfIx21NS8VI6dOlU9GHSnNtNiiAExAtzWV4JPyiciJtLGsxLjARpOQkPcKsQ6tw8EZ+RL4BqDnfBLRMn8MyTrLuoJZn8YGUmYcVRgQCvZd8xePJDTNBW0z5ZUYdUaLL9KA00Yki0HRzncvsEUp7EdzDYoibytIX386wU8i/x1KGhNiI2o6JcmUJhiiXRgbAaIzxAEMg++SB9ea1Q0gtHeLqpBUVwjbTp0U='}, 'reference': 'CSE Payment', 'amount': {'value': '1500', 'currency': 'USD'}}
+-----------------
+b'{"additionalData":{"riskProfile":"ColinRood","cardBin":"411111","aliasType":"Default","alias":"H167852639363479","cardPaymentMethod":"visa","cardIssuingCountry":"NL"},"pspReference":"8835199231328456","resultCode":"Authorised","authCode":"96317"}'
 ```

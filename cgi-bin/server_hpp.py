@@ -27,6 +27,7 @@ for key in form.keys():
 # server side fields
 data["sessionValidity"] = datetime.datetime.now().isoformat().split(".")[0] + "-11:00"
 data["shipBeforeData"] = datetime.datetime.now().isoformat().split(".")[0] + "-11:00"
+data["brandCode"] = "mc"
 
 # generate merchant signature
 
@@ -61,5 +62,5 @@ sys.stdout.write("Content-type:application/json\r\n\r\n")
 print(data)
 
 # redirect to HPP page in new window
-url = "https://test.adyen.com/hpp/pay.shtml"
+url = "https://test.adyen.com/hpp/skipDetails.shtml"
 webbrowser.open_new(url + "?" + urlencode(data))

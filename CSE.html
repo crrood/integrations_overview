@@ -36,6 +36,10 @@
 // based heavily on:
 // https://github.com/Adyen/adyen-cse-web/blob/master/adyen.encrypt.simple.html
 
+document.getElementById("logBtn").addEventListener("click", function() {
+	console.log(encryptedForm);
+});
+
 // set up options and initialize encrypted form object
 // run on page load
 function initCardsCheckout() {
@@ -91,7 +95,7 @@ function onSubmit(e) {
 	params = params + "encryptedData=" + encodeURIComponent(form.elements["adyen-encrypted-data"].value) + "&";
 
 	// redirect to server
-	window.location = "./cgi-bin/server_test.py" + params;
+	window.location = "./cgi-bin/server_cse.py" + params;
 }
 
 initCardsCheckout();

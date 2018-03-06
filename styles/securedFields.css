@@ -1,0 +1,66 @@
+.inactive {
+	display: none;
+}
+
+/* From Secured Fields */
+.payment-div {
+	margin: 0 auto;
+	width: 60%;
+}
+
+.input-container {
+	float: left;
+	margin-top: 8px;
+	position: relative;
+	width: 100%;
+}
+
+.input-field {
+	border: 1px solid #dedede;
+	border-radius: 2px;
+	float: left;
+	height: 30px;
+	padding: 0 0 0 6px;
+	margin-top: 6px;
+	position: relative;
+	width: 300px;
+}
+
+.input-label {
+	float: left;
+	font-family: Arial, sans-serif;
+	font-weight: bold;
+	position: relative;
+	width: 100%;
+}
+
+.custom-field {
+	float: left;
+	position: relative;
+	width: 300px;
+}
+
+
+.button--pay {
+	color: #fff;
+	background-color: #0abf53;
+	border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	border: none;
+	font-family: Arial, sans-serif;
+	font-size: 16px;
+	height: 40px;
+	padding-top: 2px;
+	margin-top: 20px;
+	width: 310px;
+}
+
+.button--pay.disabled {
+	pointer-events: none;
+	opacity: .5;
+}
+
+.brand-container__image {
+	width: 40px;
+}

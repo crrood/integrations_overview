@@ -16,12 +16,14 @@
 				<div class="inputHolder">ShopperReference: <input type="text" id="shopperReference" name="shopperReference" value="localhostCheckout1"/><br></div>
 				<div class="inputHolder">Channel: <input type="text" id="channel" name="channel" value="Web"/><br></div>
 				<div class="inputHolder">MerchantAccount: <input type="text" id="merchantAccount" name="merchantAccount" value="ColinRood"/><br></div>
-				<input type="button" class="submitBtn" id="checkoutBtn" value="Checkout"/>
+				<input type="button" id="checkoutBtn" value="Checkout"/>
 			</form>
 		</div>
 	</div>
-	<h4>Payment result:</h4>
-	<div id="paymentResult">"Patience is a virtue" - Confucius probably</div>
+	<div id="verifyContainer" style="display: none;">
+		<input type="button" id="verifyBtn" value="Verify Payment"/>
+		<div id="verifyResult"></div>
+	</div>
 </body>
 
 </html>
@@ -75,8 +77,36 @@ var sdkConfigObj = {
 // Add eventListener to Checkout button
 document.getElementById("checkoutBtn").addEventListener("click", openCheckout);
 
+// Called on successful transaction
+function setupVerify(pHookData) {
+
+	console.log("setupVerify");
+	console.log(pHookData);
+
+	// Show verify container
+	document.getElementById("verifyContainer").style.display = "block";
+
+	// Set up verify call
+	document.getElementById("verifyBtn").addEventListener("click", function() {
+
+		// Disable verify button
+		document.getElementById("verifyBtn").disabled = true;
+
+		// Send data to server
+		var url = "./cgi-bin/server_checkout.py";
+		var postData = "endpoint=verify&payload=" + pHookData.payload;
+		var headers = { "Content-Type": "application/x-www-form-urlencoded" };
+		var method = "POST";
+
+		AJAXPost(url + "?" + postData, headers, "POST", function() {
+			// Display response
+			document.getElementById("verifyResult").innerHTML = this.responseText;
+		});
+	});
+}
+
 // Handle response from setup call
-callback = function() {
+setupCallback = function() {
 
 	if (this.readyState == 4) {
 		console.log(this);
@@ -89,7 +119,7 @@ callback = function() {
 
 			// Handle response from initiate call
 			chckt.hooks.beforeComplete = function(pNode, pHookData, pData){
-				document.getElementById("paymentResult").innerHTML = pData["resultCode"];	
+				setupVerify(pHookData);
 				console.log(JSON.stringify(pData));
 			}
 
@@ -105,6 +135,7 @@ callback = function() {
 			};
 		}
 		catch (e) {
+			console.log("error:");
 			console.log(e);
 			document.getElementById("checkout").innerHTML = this.responseText;
 		}
@@ -112,7 +143,7 @@ callback = function() {
 };
 
 // Send request to server
-function AJAXPost(path, headers, method) {
+function AJAXPost(path, headers, method, callback) {
 	var request = new XMLHttpRequest();
 	request.open(method || "POST", path, true);
 	request.onreadystatechange = callback;
@@ -135,12 +166,12 @@ function openCheckout() {
 	formString = formString + "endpoint=setup";
 
 	// Set parameters for request to server
-	url = "./cgi-bin/server_checkout.py";
-	headers = { "Content-Type": "application/x-www-form-urlencoded" };
-	method = "POST";
+	var url = "./cgi-bin/server_checkout.py";
+	var headers = { "Content-Type": "application/x-www-form-urlencoded" };
+	var method = "POST";
 
 	// calls async javascript function to send to server
-	AJAXPost(encodeURI(url + "?" + formString), headers, method);
+	AJAXPost(encodeURI(url + "?" + formString), headers, method, setupCallback);
 }
 
 </script>

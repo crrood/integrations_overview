@@ -68,12 +68,8 @@ def setup(data):
 	request = Request(url, json.dumps(data).encode("UTF8"), header_object)
 	response = urlopen(request).read()
 
-	# respond with headers
+	# respond to browser
 	sys.stdout.write("Content-type:application/json\r\n\r\n")
-
-	# send data for debugging
-	# print(data)
-	# print("-----------------")
 	print(response.decode("UTF8"))
 
 # javascript checkout SDK
@@ -87,8 +83,12 @@ def verify(data):
 	}
 
 	# get and return response
-	# result = send_request(url, data, headers)
-	# send_response(result, "application/json")
+	request = Request(url, json.dumps(data).encode("UTF8"), header_object)
+	response = urlopen(request).read()
+
+	# respond to browser
+	sys.stdout.write("Content-type:application/json\r\n\r\n")
+	print(response.decode("UTF8"))
 
 
 

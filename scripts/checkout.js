@@ -69,24 +69,32 @@ function openCheckout() {
 
 // Send request to server
 function AJAXPost(path, headers, method, callback) {
+
+	// Initialize a request object
 	var request = new XMLHttpRequest();
 	request.open(method || "POST", path, true);
+
+	// Tell the browser what to do when we get a response
 	request.onreadystatechange = callback;
 
+	// Iterate through headers and add to request object
 	for (var key in headers) {
 		request.setRequestHeader(key, headers[key]);
 	}
 
+	// Send request to server
 	request.send({});
 };
 
 // Handle response from setup call
 setupCallback = function() {
 
+	// Only execute this function if the response is complete
 	if (this.readyState == 4) {
 		console.log(this);
 
 		try {
+			// Parse response to JSON object
 			var data = JSON.parse(this.responseText);
 
 			// Initialize checkout
